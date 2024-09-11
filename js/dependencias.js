@@ -3,6 +3,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const unidadeConsumidoraId = urlParams.get('unidadeConsumidoraId');
     document.getElementById('unidadeConsumidoraId').value = unidadeConsumidoraId;
 
+    window.uniId = unidadeConsumidoraId;  
+    console.log("unidadeConsumidoraId recebido:", unidadeConsumidoraId);
+
     fetchDependencias(unidadeConsumidoraId);
 
     document.getElementById('dependenciaFormElement').addEventListener('submit', function (event) {
@@ -11,9 +14,13 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
-function manageDispositivos(dependenciaId) {
-    window.location.href = `dispositivos.html?dependenciaId=${dependenciaId}`;
+
+function manageDispositivos(dependenciaId, unidadeConsumidoraId) {
+
+    window.location.href = `dispositivos.html?dependenciaId=${dependenciaId}&unidadeConsumidoraId=${unidadeConsumidoraId}`;
 }
+
+
 
 function fetchDependencias(unidadeConsumidoraId) {
     fetch(`http://localhost:8000/dependencias/unidade-consumidora/${unidadeConsumidoraId}`)
@@ -22,6 +29,7 @@ function fetchDependencias(unidadeConsumidoraId) {
             const list = document.getElementById('dependenciasList');
             list.innerHTML = '<ul class="list-group border border-danger">';
             data.dependencias.forEach(dependencia => {
+                console.log(unidadeConsumidoraId)
                 list.innerHTML += `
                     <li class="list-group-item m-2 p-2 border-bottom">
                         <div class="row d-flex justify-content-between">
@@ -29,11 +37,12 @@ function fetchDependencias(unidadeConsumidoraId) {
                             <div class="col">
                                 <button class="btn btn-info btn-sm float-end ms-2" onclick="showEditForm(${dependencia.id}, '${dependencia.nome}', ${dependencia.unidade_consumidora_id})">Editar</button>
                                 <button class="btn btn-danger btn-sm float-end" onclick="deleteDependencia(${dependencia.id})">Deletar</button>
-                                <button class="btn btn-primary btn-sm float-end" onclick="manageDispositivos(${dependencia.id})">Gerenciar Dispositivos</button>
+                                <button class="btn btn-primary btn-sm float-end" onclick="manageDispositivos(${dependencia.id}, ${unidadeConsumidoraId})">Gerenciar Dispositivos</button>
                             </div>
                         </div>
                     </li>`;
-            });
+
+                });
             list.innerHTML += '</ul>';
         })
         .catch(error => console.error('Erro ao buscar as dependências:', error));

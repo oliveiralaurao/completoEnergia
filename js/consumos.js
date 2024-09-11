@@ -3,24 +3,30 @@ document.addEventListener("DOMContentLoaded", function () {
     const itemSelect = document.getElementById('itemId');
     const residenciaContainer = document.getElementById('residenciaContainer');
     const residenciaSelect = document.getElementById('residenciaId');
-    const dependenciaContainer = document.getElementById('dependenciaContainer');
     const dependenciaSelect = document.getElementById('dependenciaId');
     const dispositivoContainer = document.getElementById('dispositivoContainer');
-    const dispositivoSelect = document.getElementById('dispositivoId');
+    const oi = document.getElementById('oi');
 
     origemSelect.addEventListener('change', function () {
         const origem = this.value;
         if (origem === 'dependencias') {
             residenciaContainer.style.display = 'block';
             dispositivoContainer.style.display = 'none';
-            loadResidencias(); 
+            itemSelect.style.display = 'block'; // Mostrar campo itemId
+            itemSelect.required = true; // Adicionar o atributo required
+            loadResidencias();
         } else if (origem === 'dispositivos') {
             residenciaContainer.style.display = 'block';
             dispositivoContainer.style.display = 'block';
-            loadResidencias(); 
+            itemSelect.style.display = 'none'; // Esconder campo itemId
+            oi.style.display = 'none'; // Esconder campo itemId
+            itemSelect.required = false; // Remover o atributo required
+            loadResidencias();
         } else {
             residenciaContainer.style.display = 'none';
             dispositivoContainer.style.display = 'none';
+            itemSelect.style.display = 'block'; // Esconder campo itemId
+            itemSelect.required = true; // Remover o atributo required
             loadResidencias();
             if (origem) {
                 loadItemIds(origem);
@@ -33,9 +39,9 @@ document.addEventListener("DOMContentLoaded", function () {
     residenciaSelect.addEventListener('change', function () {
         const residenciaId = this.value;
         if (residenciaId) {
-            loadDependencias(residenciaId); 
+            loadDependencias(residenciaId);
             if (origemSelect.value === 'dispositivos') {
-                loadDispositivos(residenciaId); // Carregar dispositivos se a origem for dispositivos
+                loadDispositivos(residenciaId);
             }
         } else {
             dependenciaSelect.innerHTML = '<option value="">Selecione um cômodo</option>';
@@ -44,12 +50,11 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 
     itemSelect.addEventListener('change', function () {
-        const origem = origemSelect.value;
-        if (origem === 'dispositivos') {
-            const residenciaId = residenciaSelect.value;
-            if (residenciaId) {
-                loadDispositivos(residenciaId); // Carregar dispositivos se a origem for dispositivos
-            }
+        const dependenciaId = this.value;
+        if (dependenciaId) {
+            loadDispositivos(dependenciaId);
+        } else {
+            dispositivoSelect.innerHTML = '<option value="">Selecione um dispositivo</option>';
         }
     });
 
@@ -76,10 +81,10 @@ function loadDependencias(residenciaId) {
     fetch(`http://localhost:8000/dependencias/unidade-consumidora/${residenciaId}`)
         .then(response => response.json())
         .then(data => {
-            const itemSelect = document.getElementById('itemId');
-            itemSelect.innerHTML = '<option value="">Selecione um cômodo</option>';
+            const itemId = document.getElementById('itemId');
+            itemId.innerHTML = '<option value="">Selecione um cômodo</option>';
             data.dependencias.forEach(dependencia => {
-                itemSelect.innerHTML += `<option value="${dependencia.id}">${dependencia.nome || dependencia.id}</option>`;
+                itemId.innerHTML += `<option value="${dependencia.id}">${dependencia.nome || dependencia.id}</option>`;
             });
         })
         .catch(error => console.error('Erro ao carregar os cômodos:', error));
@@ -154,19 +159,26 @@ function loadItemIds(origem) {
 function calcularConsumo() {
     let origemDoConsumo = document.getElementById('origemDoConsumo').value;
 
-    const itemId = document.getElementById('itemId').value;
+    let itemId = document.getElementById('itemId').value;
+    let dispositivoId = document.getElementById('dispositivoId').value;
 
-    if (!itemId) {
+    // Verifique se itemId é vazio ou se dispositivoId não está selecionado
+    if (!itemId && !dispositivoId) {
         alert("Por favor, selecione um item.");
         return;
     }
 
     if (origemDoConsumo === 'unidades-consumidoras') {
         origemDoConsumo = 'residencia';  
-    }
-    if (origemDoConsumo === 'dependencias') {
+    } else if (origemDoConsumo === 'dependencias') {
         origemDoConsumo = 'comodo';  
+    } else if (origemDoConsumo === 'dispositivos') {
+        origemDoConsumo = 'dispositivo_eletrico';
+        itemId = dispositivoId;  // Defina itemId com o valor de dispositivoId
     }
+
+    // Certifique-se de que itemId seja uma string
+    itemId = String(itemId);
 
     fetch(`http://localhost:8000/consumos/?origem_do_consumo=${origemDoConsumo}&item_id=${itemId}`)
         .then(response => response.json())
@@ -175,6 +187,7 @@ function calcularConsumo() {
         })
         .catch(error => console.error('Erro ao calcular o consumo:', error));
 }
+
 
 function mostrarResultado(data) {
     const resultadoDiv = document.getElementById('resultado');

@@ -36,7 +36,7 @@ function fetchUnidadesConsumidoras() {
                         <div class="row d-flex justify-content-between">
                             <div class="col"><strong>${unidade.nome}</strong></div>
                             <div class="col">
-                                <button class="btn btn-info btn-sm float-end ms-2" onclick="showEditForm(${unidade.id}, '${unidade.nome}', ${unidade.tipo_id})">Editar</button>
+                                <button class="btn btn-info btn-sm float-end" onclick="showEditForm(${unidade.id}, '${unidade.nome}', ${unidade.tipo_id})">Editar</button>
                                 <button class="btn btn-danger btn-sm float-end" onclick="deleteUnidadeConsumidora(${unidade.id})">Deletar</button>
                                 <button class="btn btn-primary btn-sm float-end" onclick="manageDependencias(${unidade.id})">Gerenciar Dependências</button>
                             </div>

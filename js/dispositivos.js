@@ -1,22 +1,31 @@
 document.addEventListener("DOMContentLoaded", function () {
     const urlParams = new URLSearchParams(window.location.search);
     const dependenciaId = urlParams.get('dependenciaId');
-    const unidadeConsumidoraId = urlParams.get('unidadeConsumidoraId');
-    console.log("dependenciaId recebido:", dependenciaId);
-    
-    dependenciaInt = parseInt(dependenciaId)
-    fetchDependencias(dependenciaId);
-    fetchUnidadesConsumidoras();
-    fetchTipo()
+    const unidadeConsumidoraId = urlParams.get('unidadeConsumidoraId'); 
+    console.log(urlParams)
+   
+    window.globalUnidadeConsumidoraId = unidadeConsumidoraId;  
+    console.log("unidade recebido:", unidadeConsumidoraId);
 
     if (dependenciaId) {
-        document.getElementById('dependenciaId').textContent = dependenciaId;
+        const dependenciaInt = parseInt(dependenciaId, 10);
+        
+        if (!isNaN(dependenciaInt)) {
+            fetchDependencias(dependenciaInt);
+            fetchDispositivos(dependenciaInt);
+        } else {
+            console.error("O valor de dependenciaId não é um número válido.");
+        }
+    } else {
+        console.error("Nenhum dependenciaId fornecido na URL.");
     }
+    
+    fetchUnidadesConsumidoras();
+    fetchTipo();
+
     if (unidadeConsumidoraId) {
         document.getElementById('unidadeConsumidoraId').value = unidadeConsumidoraId;
     }
-
-    fetchDispositivos(dependenciaId);
 
     document.getElementById('dispositivoFormElement').addEventListener('submit', function (event) {
         event.preventDefault();
@@ -25,30 +34,31 @@ document.addEventListener("DOMContentLoaded", function () {
 });
 
 
-function fetchDependencias(dependenciaId) {
-    console.log("Chamando fetchDependencias com:", dependenciaId); 
-    
-    const dependenciaInput = document.getElementById('dependenciaId');
-    
-    if (dependenciaInput) {
-    document.getElementById("dependenciaId").value = dependenciaInt
-        console.log("Valor definido no input:", dependenciaInput.value);
-        console.log(typeof(dependenciaInt))
-    } else {
-        console.error('Elemento com id "dependenciaId" não encontrado.');
+
+function fetchDependencias(dependenciaInt) {
+
+    if (isNaN(dependenciaInt)) {
+        console.error("O valor passado para dependenciaInt não é um número válido.");
+        return;
     }
+
+    var dependenciaInput = document.getElementById('dependenciaId');
+    dependenciaInput.value = dependenciaInt;
+
 }
 
+
+
 function fetchTipo() {
-    fetch(`http://localhost:8000/tipos-consumidores`)
+    fetch(`http://localhost:8000/tipos-dispositivos`)
         .then(response => response.json())
         .then(data => {
             const tipoSelect = document.getElementById('tipoId');
             tipoSelect.innerHTML = '<option value="">Selecione o Tipo </option>'; // Reset the select options
 
-            data.tipos_consumidores.forEach(tipo => {
+            data.tipos_dispositivos.forEach(tipo => {
                 tipoSelect.innerHTML += `
-                    <option value="${tipo.id}">${tipo.nome} - ${tipo.valor_kwh} kWh</option>
+                    <option value="${tipo.id}">${tipo.nome}</option>
                 `;
             });
         })
@@ -97,9 +107,21 @@ function fetchDispositivos(dependenciaId) {
 
 function showAddForm() {
     document.getElementById('dispositivoForm').classList.remove('d-none');
-    document.getElementById('dispositivoFormElement').reset();
+
+    const form = document.getElementById('dispositivoFormElement');
+
+    for (let element of form.elements) {
+        if (element.type !== 'hidden') {
+            element.value = '';
+            if (element.tagName === 'SELECT') {
+                element.selectedIndex = -1;
+            }
+        }
+    }
+
     document.getElementById('formTitle').innerText = 'Adicionar Dispositivo';
 }
+
 
 function showEditForm(id, nome, tipoId, consumo, usoDiario) {
     document.getElementById('dispositivoForm').classList.remove('d-none');
