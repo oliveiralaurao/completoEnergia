@@ -62,6 +62,7 @@ document.addEventListener("DOMContentLoaded", function () {
         event.preventDefault();
         calcularConsumo();
     });
+    fetchBandeira()
 });
 
 function loadResidencias() {
@@ -155,14 +156,31 @@ function loadItemIds(origem) {
         itemSelect.innerHTML = '<option value="">Selecione um item</option>';
     }
 }
+function fetchBandeira() {
+    const bandeiraSelect = document.getElementById("bandeiraId");
+    fetch('http://127.0.0.1:8000/bandeiras')
+        .then(response => response.json())
+        .then(data => {
+            bandeiraSelect.innerHTML = '<option value="">Selecione uma bandeira</option>';
+            
+            data.bandeiras.forEach(item => {
+                bandeiraSelect.innerHTML += `
+                    <option value="${item.id}">
+                      ${item.nome || item.id} - Valor: R$${item.tarifa} 
+                    </option>
+                `;
+            });
+        })
+        .catch(error => console.error('Erro ao carregar os IDs dos itens:', error));
+}
 
 function calcularConsumo() {
     let origemDoConsumo = document.getElementById('origemDoConsumo').value;
 
     let itemId = document.getElementById('itemId').value;
     let dispositivoId = document.getElementById('dispositivoId').value;
+    const bandeira = document.getElementById('bandeiraId').value
 
-    // Verifique se itemId é vazio ou se dispositivoId não está selecionado
     if (!itemId && !dispositivoId) {
         alert("Por favor, selecione um item.");
         return;
@@ -177,10 +195,10 @@ function calcularConsumo() {
         itemId = dispositivoId;  // Defina itemId com o valor de dispositivoId
     }
 
-    // Certifique-se de que itemId seja uma string
     itemId = String(itemId);
+    console.log(bandeira)
 
-    fetch(`http://localhost:8000/consumos/?origem_do_consumo=${origemDoConsumo}&item_id=${itemId}`)
+    fetch(`http://localhost:8000/consumos/?origem_do_consumo=${origemDoConsumo}&item_id=${itemId}&bandeira_id=${bandeira}`)
         .then(response => response.json())
         .then(data => {
             mostrarResultado(data);
@@ -194,13 +212,23 @@ function mostrarResultado(data) {
 
     if (data && data.consumo_diario !== undefined && data.consumo_mensal !== undefined && data.consumo_anual !== undefined) {
         resultadoDiv.innerHTML = `
-            <div class="alert alert-success" role="alert">
-                <h4>Consumo Calculado:</h4>
-                <p><strong>Consumo Diário:</strong> ${data.consumo_diario} kWh</p>
-                <p><strong>Consumo Mensal:</strong> ${data.consumo_mensal} kWh</p>
-                <p><strong>Consumo Anual:</strong> ${data.consumo_anual} kWh</p>
+            <div class="alert alert-success mt-4" role="alert">
+                <h4 class="alert-heading"><i class="bi bi-check-circle"></i> Consumo Calculado</h4>
+                <hr>
+                <p><strong>Consumo Diário:</strong> <span class="badge bg-primary">${data.consumo_diario} kWh</span></p>
+                <p><strong>Consumo Mensal:</strong> <span class="badge bg-primary">${data.consumo_mensal} kWh</span></p>
+                <p><strong>Consumo Anual:</strong> <span class="badge bg-primary">${data.consumo_anual} kWh</span></p>
+                <p><strong>Custo Diário:</strong> <span class="badge bg-secondary">${data.custo_diario} R$</span></p>
+                <p><strong>Custo Mensal:</strong> <span class="badge bg-secondary">${data.custo_mensal} R$</span></p>
+                <p><strong>Custo Anual:</strong> <span class="badge bg-secondary">${data.custo_anual} R$</span></p>
             </div>`;
     } else {
-        resultadoDiv.innerHTML = '<div class="alert alert-danger" role="alert">Não foi possível calcular o consumo.</div>';
+        resultadoDiv.innerHTML = `
+            <div class="alert alert-danger mt-4" role="alert">
+                <h4 class="alert-heading"><i class="bi bi-x-circle"></i> Erro ao Calcular</h4>
+                <hr>
+                <p>Não foi possível calcular o consumo. Por favor, verifique os dados e tente novamente.</p>
+            </div>`;
     }
 }
+

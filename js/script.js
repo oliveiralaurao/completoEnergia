@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function () {
     });
 });
 
+
 function fetchTiposConsumidores() {
     fetch('http://localhost:8000/tipos-consumidores')
         .then(response => response.json())
@@ -33,15 +34,16 @@ function fetchUnidadesConsumidoras() {
             data.unidades_consumidoras.forEach(unidade => {
                 list.innerHTML += `
                     <li class="list-group-item m-2 p-2 border-bottom">
-                        <div class="row d-flex justify-content-between">
-                            <div class="col"><strong>${unidade.nome}</strong></div>
-                            <div class="col">
-                                <button class="btn btn-info btn-sm float-end" onclick="showEditForm(${unidade.id}, '${unidade.nome}', ${unidade.tipo_id})">Editar</button>
-                                <button class="btn btn-danger btn-sm float-end" onclick="deleteUnidadeConsumidora(${unidade.id})">Deletar</button>
-                                <button class="btn btn-primary btn-sm float-end" onclick="manageDependencias(${unidade.id})">Gerenciar Dependências</button>
-                            </div>
-                        </div>
-                    </li>`;
+    <div class="row d-flex justify-content-between">
+        <div class="col"><strong>${unidade.nome}</strong></div>
+        <div class="col text-end">
+            <button class="btn btn-custom btn-custom-info btn-sm" onclick="showEditForm(${unidade.id}, '${unidade.nome}', ${unidade.tipo_id})">Editar</button>
+            <button class="btn btn-custom btn-custom-danger btn-sm" onclick="deleteUnidadeConsumidora(${unidade.id})">Deletar</button>
+            <button class="btn btn-custom btn-custom-primary btn-sm" onclick="manageDependencias(${unidade.id})">Gerenciar Dependências</button>
+        </div>
+    </div>
+</li>
+`;
             });
             list.innerHTML += '</ul>';
         })
